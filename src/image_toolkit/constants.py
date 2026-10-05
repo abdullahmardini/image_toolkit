@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 TARGET_DIR = Path.cwd()

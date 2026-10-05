@@ -43,9 +43,8 @@ def video_dimensions(path: Path) -> tuple[int, int] | None:
                     width, height = height, width
                 if width > 0 and height > 0:
                     return width, height
-    except Exception:
-        pass
-    return None
+    except (OSError, ValueError, json.JSONDecodeError, subprocess.SubprocessError):
+        return None
 
 
 def video_codecs(path: Path) -> tuple[str | None, str | None]:
@@ -70,5 +69,5 @@ def video_codecs(path: Path) -> tuple[str | None, str | None]:
             elif stype == "audio" and not a_codec:
                 a_codec = stream.get("codec_name")
         return v_codec, a_codec
-    except Exception:
+    except (OSError, ValueError, json.JSONDecodeError, subprocess.SubprocessError):
         return None, None

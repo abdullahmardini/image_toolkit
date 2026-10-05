@@ -27,7 +27,7 @@ def audit() -> None:
                     w, h = img.size
                 total_images += 1
                 image_counts[images.classify_ratio(w, h)] += 1
-            except Exception:
+            except (OSError, ValueError):
                 continue
         elif files.is_video_file(name):
             dims = videos.video_dimensions(p)

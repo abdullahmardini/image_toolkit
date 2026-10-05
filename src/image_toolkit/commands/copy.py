@@ -5,12 +5,12 @@ import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
+from PIL import Image
+from pillow_heif import register_heif_opener
 from rich.console import Console
 
 from .. import constants
 from ..core import files
-from PIL import Image
-from pillow_heif import register_heif_opener
 
 register_heif_opener()
 
@@ -33,8 +33,7 @@ def _process_file(src_path_str: str, filename: str) -> tuple[str, str, int] | No
                     pass
             src = temp_png
             filename_out = new_filename
-        except Exception as e:
-            console.print(f"Error converting {src}: {e}")
+        except (OSError, ValueError):
             return None
     else:
         filename_out = filename

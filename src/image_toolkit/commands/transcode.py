@@ -5,7 +5,7 @@ from pathlib import Path
 from rich.console import Console
 
 from .. import constants
-from ..core import files, ffmpeg, videos
+from ..core import ffmpeg, files, videos
 
 console = Console()
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
 
@@ -31,8 +30,7 @@ class AutoCropAppPortrait:
             from ultralytics import YOLO
 
             self.model = YOLO(constants.YOLO_MODEL)
-        except Exception as e:
-            console.print(f"YOLO load failed: {e}")
+        except (OSError, RuntimeError, ImportError):
             self.model = None
 
         import tkinter as tk
@@ -90,7 +88,6 @@ class AutoCropAppPortrait:
         if self.orig_img is None:
             return
         self.img_w, self.img_h = self.orig_img.size
-        import tkinter as tk
 
         raw_w = self.canvas.winfo_width()
         raw_h = self.canvas.winfo_height()
@@ -120,14 +117,35 @@ class AutoCropAppPortrait:
         if self.model is None or self.orig_img is None:
             return self.img_w / 2.0, self.img_h / 2.0
         try:
-            results = self.model(self.orig_img, verbose=False)[0]
-            for box in results.boxes:
-                try:
-                    if int(box.cls[0]) == constants.CAT_CLASS_ID:
-                        x1, y1, x2, y2 = box.xyxy[0].tolist()
-                        return (x1 + x2) / 2.0, (y1 + y2) / 2.0
-                except Exception:
-                    continue
+            try:
+                results_iter = self.model(self.orig_img, verbose=False)
+                results = next(iter(results_iter), None)
+            except Exception:
+                results = None
+            if results is None:
+                return self.img_w / 2.0, self.img_h / 2.0
+            boxes_obj = getattr(results, "boxes", None)
+            if boxes_obj is None:
+                return self.img_w / 2.0, self.img_h / 2.0
+            try:
+                for box in boxes_obj:
+                    try:
+                        cls_list = getattr(box, "cls", [])
+                        if not cls_list:
+                            continue
+                        if int(cls_list[0]) == constants.CAT_CLASS_ID:
+                            xyxy = getattr(box, "xyxy", [])
+                            if not xyxy:
+                                continue
+                            first = xyxy[0]
+                            vals = first.tolist() if hasattr(first, "tolist") else []
+                            if len(vals) >= 4:
+                                x1, y1, x2, y2 = vals[0], vals[1], vals[2], vals[3]
+                                return (x1 + x2) / 2.0, (y1 + y2) / 2.0
+                    except (ValueError, AttributeError, IndexError):
+                        continue
+            except (TypeError, AttributeError):
+                pass
         except Exception as e:
             console.print(f"Detection note for {self.current_file}: {e}")
         return self.img_w / 2.0, self.img_h / 2.0
@@ -229,7 +247,6 @@ class AutoCropAppPortrait:
         crop_y2 = min(self.img_h, int((self.box_y2 - self.offset_y) / self.scale))
         self.preview_cropped_img = self.orig_img.crop((crop_x1, crop_y1, crop_x2, crop_y2))
         self.is_cropped = True
-        import tkinter as tk
 
         raw_w = self.canvas.winfo_width() or 1280
         raw_h = self.canvas.winfo_height() or 750
@@ -291,7 +308,6 @@ class AutoCropAppPortrait:
 
     def update_info_label(self) -> None:
         status = "CROPPED PREVIEW" if self.is_cropped else "SELECTING FRAME"
-        import tkinter as tk
 
         self.info_label.config(
             text=(

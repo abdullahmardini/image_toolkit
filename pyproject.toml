@@ -29,6 +29,11 @@ target-version = "py311"
 requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
+[dependency-groups]
+dev = [
+    "ty>=0.0.84",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/image_toolkit"]
 
@@ -42,3 +47,10 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 show_error_codes = true
 exclude = ["build", "dist", ".venv"]
+
+[tool.ty.src]
+include = ["src"]
+exclude = ["build", "dist", ".venv"]
+
+[tool.ty.environment]
+extra-paths = []

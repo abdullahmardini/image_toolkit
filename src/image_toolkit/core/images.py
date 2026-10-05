@@ -16,7 +16,7 @@ def open_with_exif(path: Path) -> Image.Image:
     if hasattr(Image, "ops"):
         try:
             img = Image.ops.exif_transpose(img)
-        except Exception:
+        except (AttributeError, OSError, ValueError):
             pass
     return img
 
@@ -49,5 +49,5 @@ def is_non_portrait_9x16(path: Path) -> bool:
             w, h = img.size
             ratio = w / h if h > 0 else 1.0
             return abs(ratio - constants.PORTRAIT_ASPECT) >= constants.CROP_TOLERANCE
-    except Exception:
+    except (OSError, ValueError):
         return False
